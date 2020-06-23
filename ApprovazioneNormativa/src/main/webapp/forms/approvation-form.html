@@ -1,0 +1,41 @@
+<form class="form-horizontal"
+      role="form">
+
+  <p>Approvi questo documento?</p>
+
+  
+  <div class="form-group">
+    <label class="control-label col-md-2">Titolo</label>
+    <div class="col-md-10">
+      <input cam-variable-name="titolo"
+             type="text"
+             name="titolo"
+             readonly="true"
+             class="form-control" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="control-label col-md-2">Note</label>
+    <div class="col-md-10">
+      <input cam-variable-name="note"
+             type="text"
+             name="note"
+             readonly="true"
+             class="form-control" />
+    </div>
+  </div>
+    <div class="form-group">
+    <div class="col-md-10 col-md-offset-2">
+      <div class="checkbox">
+        <label>
+          <input cam-variable-name="approvato"
+                 cam-variable-type="Boolean"
+                 type="checkbox"
+                 name="approvato"
+                 class="form-control" />
+          Approvi?
+        </label>
+      </div>
+    </div>
+  </div>
+</form>

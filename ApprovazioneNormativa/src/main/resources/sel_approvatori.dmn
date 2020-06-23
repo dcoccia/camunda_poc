@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
+  <decision id="selezione_approvatori" name="Selezione approvatori">
+    <decisionTable id="decisionTable">
+      <input id="input1" label="ufficio" camunda:inputVariable="">
+        <inputExpression id="inputExpression1" typeRef="string">
+          <text>collElement</text>
+        </inputExpression>
+      </input>
+      <output id="output1" label="gruppo" name="gruppo" typeRef="string" />
+      <rule id="row-85617872-1">
+        <inputEntry id="UnaryTests_0mnykrr">
+          <text>"Dir. Operativa e Sistemi"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0e4auq2">
+          <text>"diroperativa"</text>
+        </outputEntry>
+      </rule>
+      <rule id="row-85617872-2">
+        <inputEntry id="UnaryTests_19y4ukj">
+          <text>"Area Organizzazione"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_13edzjj">
+          <text>"sales"</text>
+        </outputEntry>
+      </rule>
+      <rule id="row-85617872-3">
+        <inputEntry id="UnaryTests_1dh70nk">
+          <text>"Uff. Sviluppo Applicativo"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0mmm059">
+          <text>"uffsviluppo"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1wqkftz">
+        <inputEntry id="UnaryTests_0y7wp9x">
+          <text>"Area ICT"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1c5xp7s">
+          <text>"sales"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

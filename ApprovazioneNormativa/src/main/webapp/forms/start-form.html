@@ -1,0 +1,171 @@
+<p class="h4">Inoltro documenti per approvazione</p>
+
+<form role="form" name="submitForm" class="form-horizontal">
+  
+  <!-- 
+  <script cam-script type="text/form-script">
+    debugger;
+  </script>
+   -->
+   
+  <!-- Campo singolo -->
+  <div class="form-group">
+    <label class="control-label col-md-4" for="titolo">Titolo</label>
+    <div class="col-md-8">
+      <input cam-variable-name="titolo"
+             cam-variable-type="String"
+             id="titolo"
+             class="form-control"
+             type="text"
+             required />
+    </div>
+  </div>
+  
+  <!-- Inserimento multiplo di files -->
+  <div class="form-group">
+  <label class="control-label col-md-4"	for="invoiceDocumentUpload">Carica i documenti per l'approvazione</label>
+  <div class="col-md-8">
+  	<table class="table">
+      <tbody>
+      <tr ng-repeat="file in files">
+        <td>
+          {{file.name}}
+        </td>
+        <td>
+          <span class="glyphicon glyphicon-remove" ng-click="removeDocument(file)" style="cursor:pointer"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <div>
+      <label class="btn btn-default btn-file">
+        Sfoglia <input type="file" id="fileUpload" style="display: none;" onchange="angular.element(this).scope().upload(this)" multiple>
+        <span class="glyphicon glyphicon-folder-open"/>
+      </label>
+    </div>
+  </div>
+  </div>
+  
+  <!-- Selezione -->
+  <div class="form-group">
+    <label class="control-label col-md-4" for="approvatori">Approvatori</label>
+    <div class="col-md-8">
+      <select class="form-control"
+           cam-variable-name="approvatori"
+           cam-variable-type="String"
+           cam-choices="approvatoriList"
+           name="approvatore"
+           multiple="multiple"
+           size="20">
+           	<optgroup label="Consiglio di Amministrazione">
+           		<optgroup label="Dir. Internal Audit">
+           			<option>Dir. Internal Audit</option>
+  					<option>Uff. Controllo Reti</option>
+  					<option>Uff. Controllo Struttuure Centrali ICT e Sic. Informatica</option>
+  					<option>Uff. Controlli a Distanza e Svil. Metodologico</option>
+  				</optgroup>
+  				<optgroup label="Amministratore Delegato e Direttore Generale">
+  					<option>Direttore Generale</option>
+  					<optgroup label="Dir. Risk Management">
+  						<option>Dir. Risk Management</option>
+  						<option>Uff. Convalida Interna</option>
+  						<option>Uff. Rischi Finanziari e Altri Rischi</option>	
+  						<option>Uff. Rischi di Credito e Rating Desk</option>
+  					</optgroup>
+  					<option>Uff. Compliance</option>
+  					<option>Uff. Antiriciclaggio</option>
+  					<optgroup label="Dir. Operativa e Sistemi">
+  						<option>Dir. Operativa e Sistemi</option>
+  						<optgroup label="Area ICT">
+  							<option>Area ICT</option>
+  							<option>Uff. Sviluppo Applicativo</option>
+  							<option>Uff. Infrastrutture</option>
+  						</optgroup>
+  					</optgroup>	
+  				</optgroup>
+  			</optgroup>
+  		</select>
+  		<div class="help">
+        	Selezionare uno o pi&ugrave; approvatori dalla lista
+      	</div>
+    </div>
+  </div>
+  
+  <!-- Text area -->
+  <div class="form-group">
+    <label class="control-label col-md-4" for="note">Note</label>
+    <div class="col-md-8">
+      <textarea cam-variable-name="note"
+          		cam-variable-type="String"
+          		id="note"
+             	class="form-control"
+             	type="text"/>
+    </div>
+  </div>
+  
+  <!-- Script per inserimento multiplo di files -->
+  <script cam-script type="text/form-script">
+    inject([ '$scope', function($scope) {
+
+      $scope.files = [];
+
+      $scope.upload = function(fileUpload) {
+        for (let i = 0; i < fileUpload.files.length; i++) {
+          let file = { name: fileUpload.files[i].name, mimetype: fileUpload.files[i].type, data: undefined, blob: undefined };
+          $scope.files.push(file);
+          $scope.retrieveFiledata(fileUpload.files[i], file);
+        }
+        //$scope.test.$setDirty();
+        $scope.$apply();
+      };
+
+      $scope.retrieveFiledata = function (file, fileData) {
+        let reader = new FileReader();
+        reader.onload = function (event) {
+          fileData.blob = reader.result;
+          let binary = '';
+          let bytes = new Uint8Array(reader.result);
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          fileData.data = btoa(binary);
+        };
+        reader.readAsArrayBuffer(file);
+      };
+
+      $scope.removeDocument = function (file) {
+        $scope.files.splice($scope.files.indexOf(file), 1);
+      };
+
+      
+      camForm.on('form-loaded', function() {
+      });
+
+      camForm.on('variables-fetched', function() {
+      });
+
+      camForm.on('variables-restored', function() {
+      });
+
+      camForm.on('submit', function() {
+        
+		$scope.files.forEach(function (file, index) {
+          camForm.variableManager.createVariable({
+            name: 'DOCUMENT_' + index,
+            type: 'Bytes',
+            value: file.data
+          });
+        });
+		
+	    $scope.files.forEach(function (file, index) {
+  		  camForm.variableManager.createVariable({
+    	  	name: 'DOCUMENT_NAME_' + index,
+    	  	type: 'String',
+    		value: file.name
+  		  });
+		});
+      
+	  });
+    }]);
+   </script>
+  </form>
