@@ -1,0 +1,80 @@
+<!-- DevExtreme themes -->
+<link rel="stylesheet" href="/ApprovazioneNormativa/css/dx.common.css">
+<link rel="stylesheet" href="/ApprovazioneNormativa/css/dx.light.css">
+
+<!-- DevExtreme library -->
+<script type="text/javascript" src="/ApprovazioneNormativa/js/dx.all.js"></script>
+
+<!-- Form dedicated JS -->
+<script type="text/javascript" src="/ApprovazioneNormativa/js/dxtest.js"></script>
+
+<body class="dx-viewport">
+
+	<p class="h4">Inoltro documenti per approvazione</p>
+
+	<form role="form" name="submitForm" class="form-horizontal">
+		<div class="controls">
+			<div id="titoloTextBoxContainer"></div>
+		</div>
+		<div class="controls">
+			<div id="noteTextBoxContainer"></div>
+		</div>
+		<div class="controls">
+			<div id="fileUploaderContainer"></div>
+		</div>
+		<script cam-script type="text/form-script">
+    	inject([ '$scope', function($scope) {
+
+		var variableManager = camForm.variableManager;
+    	var formElement = camForm.formElement;
+		
+    	camForm.on('form-loaded', function() {
+      		variableManager.createVariable({
+        	'name': 'titolo',
+        	'type': 'String',
+        	'value': ''
+      		});
+    	});
+
+    	camForm.on('variables-fetched', function() {
+      		$('#titolo', formElement).val(variableManager.variableValue('titolo'));
+    	});
+
+    	camForm.on('submit', function(evt) {
+			console.log($scope)
+			var backendValue = variableManager.variable('titolo').value;
+	  		var fieldValue=$('#titolo', formElement).val();
+			var files=$('#fileUpload', formElement).prop("files");
+			console.log(files[0].data)				
+	 		if(fieldValue === backendValue) {
+        		//Se il valore non è cambiato evito di postarlo
+        		evt.submitPrevented = true;
+				} else {
+        		//Imposto il valore della variabile
+				variableManager.variableValue('titolo', fieldValue);
+      			}
+			
+			
+			//	camForm.variableManager.createVariable({
+            //	name: 'DOCUMENT_' + index,
+            //	type: 'Bytes',
+            //	value: file.data
+          	//	});
+			//});
+		
+	    	//$.each(files, function (file, index) {
+  		  	//	camForm.variableManager.createVariable({
+    	  	//	name: 'DOCUMENT_NAME_' + index,
+    	  	//	type: 'String',
+    		//	value: file.name
+  		  	//	});
+			//});
+			
+		});
+		}]);
+  		</script>
+
+	</form>
+
+</body>
+

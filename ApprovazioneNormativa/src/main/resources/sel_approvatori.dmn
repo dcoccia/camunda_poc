@@ -21,7 +21,7 @@
           <text>"Area Organizzazione"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_13edzjj">
-          <text>"sales"</text>
+          <text>"areaorganizzazione"</text>
         </outputEntry>
       </rule>
       <rule id="row-85617872-3">
@@ -37,7 +37,7 @@
           <text>"Area ICT"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1c5xp7s">
-          <text>"sales"</text>
+          <text>"areaict"</text>
         </outputEntry>
       </rule>
     </decisionTable>

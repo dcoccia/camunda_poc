@@ -1,21 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:collaboration id="Collaboration_14uvlqx">
-    <bpmn:participant id="Participant_0bpb59w" name="Approvazione Normativa" processRef="assegnazione_task_dinamico" />
+    <bpmn:participant id="Participant_Approvazione_Documenti" name="Approvazione documenti" processRef="approvazione_documenti" />
   </bpmn:collaboration>
-  <bpmn:process id="assegnazione_task_dinamico" name="Assegnazione task dinamico" isExecutable="true" camunda:versionTag="v0.1">
+  <bpmn:process id="approvazione_documenti" name="Approvazione documenti" isExecutable="true" camunda:versionTag="v0.1">
     <bpmn:laneSet id="LaneSet_00h9xy0">
-      <bpmn:lane id="Lane_1w78mws" name="Normativa">
+      <bpmn:lane id="Lane_proponenti" name="Proponenti">
+        <bpmn:flowNodeRef>InizioEvento</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_1n6yyya</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>CreaListaApprovatori</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>InizioEvento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1cu1spj</bpmn:flowNodeRef>
       </bpmn:lane>
-      <bpmn:lane id="Lane_0d3z2q4" name="Approvatori">
-        <bpmn:flowNodeRef>EndEvent_0pw6qzj</bpmn:flowNodeRef>
+      <bpmn:lane id="Lane_approvatori" name="Approvatori">
+        <bpmn:flowNodeRef>SubProcess_approvazione</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_0v9ycp6</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>SubProcess_1onmv19</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>FineEvento</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
+    <bpmn:startEvent id="InizioEvento" name="Inizio&#10;evento" camunda:formKey="embedded:app:forms/dxtest.html">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="groovy">//def jsonValue = S('{ "values":[] }')
+//execution.setVariable("combinedResult", jsonValue)
+def groupList=[] 
+execution.setVariable("combinedResult", groupList)
+def jsonValue = S('{ }')
+execution.setVariable("approvationResults",jsonValue )</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>SequenceFlow_0xugshg</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0vlxykn" sourceRef="CreaListaApprovatori" targetRef="Task_1n6yyya" />
+    <bpmn:sequenceFlow id="SequenceFlow_092f4xu" sourceRef="SubProcess_approvazione" targetRef="Activity_0v9ycp6" />
+    <bpmn:sequenceFlow id="SequenceFlow_0xugshg" sourceRef="InizioEvento" targetRef="Activity_1cu1spj" />
+    <bpmn:sequenceFlow id="Flow_0mss29j" sourceRef="Task_1n6yyya" targetRef="SubProcess_approvazione" />
+    <bpmn:sequenceFlow id="Flow_0xsgc6k" sourceRef="Activity_0v9ycp6" targetRef="FineEvento" />
+    <bpmn:subProcess id="SubProcess_approvazione" name="Sottoprocesso di approvazione">
+      <bpmn:incoming>Flow_0mss29j</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_092f4xu</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics camunda:collection="${combinedResult}" camunda:elementVariable="gruppo" />
+      <bpmn:userTask id="approvazione_per" name="Approvazione documento ${titolo}" camunda:formKey="embedded:app:forms/approvation-form.html" camunda:candidateGroups="${gruppo}">
+        <bpmn:extensionElements>
+          <camunda:taskListener class="org.bdb.bpm.ApprovazioneNormativa.TaskAssignmentListener" event="create" />
+          <camunda:executionListener event="end">
+            <camunda:script scriptFormat="javascript">execution.setVariable('approvationResults',approvationResults.prop(loopCounter,approvato));</camunda:script>
+          </camunda:executionListener>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0b2vs1k</bpmn:incoming>
+        <bpmn:outgoing>SequenceFlow_0hvxmc1</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="EndEvent_Sub_Approvazione" name="Fine&#10;evento">
+        <bpmn:extensionElements>
+          <camunda:executionListener event="start">
+            <camunda:script scriptFormat="groovy" />
+          </camunda:executionListener>
+        </bpmn:extensionElements>
+        <bpmn:incoming>SequenceFlow_0hvxmc1</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:startEvent id="StartEvent_Sub_Approvazione" name="Inizio&#10;evento">
+        <bpmn:outgoing>Flow_0b2vs1k</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="SequenceFlow_0hvxmc1" sourceRef="approvazione_per" targetRef="EndEvent_Sub_Approvazione" />
+      <bpmn:sequenceFlow id="Flow_0b2vs1k" sourceRef="StartEvent_Sub_Approvazione" targetRef="approvazione_per" />
+    </bpmn:subProcess>
+    <bpmn:userTask id="Activity_0v9ycp6">
+      <bpmn:incoming>SequenceFlow_092f4xu</bpmn:incoming>
+      <bpmn:outgoing>Flow_0xsgc6k</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="FineEvento" name="Fine&#10;evento">
+      <bpmn:incoming>Flow_0xsgc6k</bpmn:incoming>
+    </bpmn:endEvent>
     <bpmn:businessRuleTask id="Task_1n6yyya" name="System List" camunda:resultVariable="dmn_output" camunda:decisionRef="selezione_approvatori" camunda:mapDecisionResult="singleResult">
       <bpmn:extensionElements>
         <camunda:executionListener event="end">
@@ -34,154 +88,112 @@ execution.setVariable("combinedResult", combinedResult)</camunda:script>
       <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="collection" camunda:elementVariable="collElement" />
     </bpmn:businessRuleTask>
     <bpmn:scriptTask id="CreaListaApprovatori" name="Crea lista approvatori" scriptFormat="groovy">
-      <bpmn:incoming>SequenceFlow_0xugshg</bpmn:incoming>
+      <bpmn:incoming>Flow_0cyzto2</bpmn:incoming>
       <bpmn:outgoing>Flow_0vlxykn</bpmn:outgoing>
       <bpmn:script>approvatori=approvatori.substring(1, approvatori.length() - 1);
 approvatori=approvatori.replace(", ", ",")
 List collection = approvatori.split(',')
 execution.setVariable("collection", collection)</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:startEvent id="InizioEvento" name="Inizio&#10;evento" camunda:formKey="embedded:app:forms/start-form.html">
-      <bpmn:extensionElements>
-        <camunda:executionListener event="end">
-          <camunda:script scriptFormat="groovy">//def jsonValue = S('{ "values":[] }')
-//execution.setVariable("combinedResult", jsonValue)
-def groupList=[] 
-execution.setVariable("combinedResult", groupList)
-def jsonValue = S('{ }')
-execution.setVariable("approvationResults",jsonValue )</camunda:script>
-        </camunda:executionListener>
-      </bpmn:extensionElements>
-      <bpmn:outgoing>SequenceFlow_0xugshg</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_0vlxykn" sourceRef="CreaListaApprovatori" targetRef="Task_1n6yyya" />
-    <bpmn:sequenceFlow id="SequenceFlow_092f4xu" sourceRef="SubProcess_1onmv19" targetRef="Activity_0v9ycp6" />
-    <bpmn:sequenceFlow id="SequenceFlow_0xugshg" sourceRef="InizioEvento" targetRef="CreaListaApprovatori" />
-    <bpmn:sequenceFlow id="Flow_0mss29j" sourceRef="Task_1n6yyya" targetRef="SubProcess_1onmv19" />
-    <bpmn:subProcess id="SubProcess_1onmv19">
-      <bpmn:incoming>Flow_0mss29j</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_092f4xu</bpmn:outgoing>
-      <bpmn:multiInstanceLoopCharacteristics camunda:collection="${combinedResult}" camunda:elementVariable="gruppo" />
-      <bpmn:userTask id="approvazione_per" name="Approvazione documento ${titolo}" camunda:formKey="embedded:app:forms/approvation-form.html" camunda:candidateGroups="${gruppo}">
-        <bpmn:extensionElements>
-          <camunda:taskListener class="org.bdb.bpm.ApprovazioneNormativa.TaskAssignmentListener" event="create" />
-          <camunda:executionListener event="end">
-            <camunda:script scriptFormat="javascript">
-execution.setVariable('approvationResults',approvationResults.prop(loopCounter,approvato)); </camunda:script>
-          </camunda:executionListener>
-        </bpmn:extensionElements>
-        <bpmn:incoming>Flow_0b2vs1k</bpmn:incoming>
-        <bpmn:outgoing>SequenceFlow_0hvxmc1</bpmn:outgoing>
-      </bpmn:userTask>
-      <bpmn:endEvent id="EndEvent_0slps19">
-        <bpmn:extensionElements>
-          <camunda:executionListener event="start">
-            <camunda:script scriptFormat="groovy"></camunda:script>
-          </camunda:executionListener>
-        </bpmn:extensionElements>
-        <bpmn:incoming>SequenceFlow_0hvxmc1</bpmn:incoming>
-      </bpmn:endEvent>
-      <bpmn:startEvent id="StartEvent_0jxprd9">
-        <bpmn:outgoing>Flow_0b2vs1k</bpmn:outgoing>
-      </bpmn:startEvent>
-      <bpmn:sequenceFlow id="SequenceFlow_0hvxmc1" sourceRef="approvazione_per" targetRef="EndEvent_0slps19" />
-      <bpmn:sequenceFlow id="Flow_0b2vs1k" sourceRef="StartEvent_0jxprd9" targetRef="approvazione_per" />
-    </bpmn:subProcess>
-    <bpmn:endEvent id="EndEvent_0pw6qzj">
-      <bpmn:incoming>Flow_0xsgc6k</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:userTask id="Activity_0v9ycp6">
-      <bpmn:incoming>SequenceFlow_092f4xu</bpmn:incoming>
-      <bpmn:outgoing>Flow_0xsgc6k</bpmn:outgoing>
+    <bpmn:userTask id="Activity_1cu1spj">
+      <bpmn:incoming>SequenceFlow_0xugshg</bpmn:incoming>
+      <bpmn:outgoing>Flow_0cyzto2</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_0xsgc6k" sourceRef="Activity_0v9ycp6" targetRef="EndEvent_0pw6qzj" />
+    <bpmn:sequenceFlow id="Flow_0cyzto2" sourceRef="Activity_1cu1spj" targetRef="CreaListaApprovatori" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_14uvlqx">
-      <bpmndi:BPMNShape id="Participant_0bpb59w_di" bpmnElement="Participant_0bpb59w" isHorizontal="true">
-        <dc:Bounds x="160" y="100" width="970" height="650" />
+      <bpmndi:BPMNShape id="Participant_0bpb59w_di" bpmnElement="Participant_Approvazione_Documenti" isHorizontal="true">
+        <dc:Bounds x="160" y="100" width="970" height="470" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_1w78mws_di" bpmnElement="Lane_1w78mws" isHorizontal="true">
+      <bpmndi:BPMNShape id="Lane_0d3z2q4_di" bpmnElement="Lane_approvatori" isHorizontal="true">
+        <dc:Bounds x="190" y="340" width="940" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1w78mws_di" bpmnElement="Lane_proponenti" isHorizontal="true">
         <dc:Bounds x="190" y="100" width="940" height="240" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_0d3z2q4_di" bpmnElement="Lane_0d3z2q4" isHorizontal="true">
-        <dc:Bounds x="190" y="340" width="940" height="410" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_0vlxykn_di" bpmnElement="Flow_0vlxykn">
-        <di:waypoint x="430" y="202" />
-        <di:waypoint x="490" y="202" />
+      <bpmndi:BPMNEdge id="Flow_0cyzto2_di" bpmnElement="Flow_0cyzto2">
+        <di:waypoint x="450" y="202" />
+        <di:waypoint x="540" y="202" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_092f4xu_di" bpmnElement="SequenceFlow_092f4xu">
-        <di:waypoint x="785" y="472" />
-        <di:waypoint x="860" y="472" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1069" y="311" width="0" height="0" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNEdge id="Flow_0xsgc6k_di" bpmnElement="Flow_0xsgc6k">
+        <di:waypoint x="960" y="455" />
+        <di:waypoint x="1062" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mss29j_di" bpmnElement="Flow_0mss29j">
+        <di:waypoint x="735" y="242" />
+        <di:waypoint x="735" y="360" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0xugshg_di" bpmnElement="SequenceFlow_0xugshg">
         <di:waypoint x="268" y="202" />
-        <di:waypoint x="330" y="202" />
+        <di:waypoint x="350" y="202" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="299" y="311" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0mss29j_di" bpmnElement="Flow_0mss29j">
-        <di:waypoint x="540" y="242" />
-        <di:waypoint x="540" y="380" />
+      <bpmndi:BPMNEdge id="SequenceFlow_092f4xu_di" bpmnElement="SequenceFlow_092f4xu">
+        <di:waypoint x="785" y="455" />
+        <di:waypoint x="860" y="455" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1069" y="311" width="0" height="0" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0xsgc6k_di" bpmnElement="Flow_0xsgc6k">
-        <di:waypoint x="960" y="472" />
-        <di:waypoint x="1062" y="472" />
+      <bpmndi:BPMNEdge id="Flow_0vlxykn_di" bpmnElement="Flow_0vlxykn">
+        <di:waypoint x="640" y="202" />
+        <di:waypoint x="685" y="202" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="BusinessRuleTask_0zi6s4a_di" bpmnElement="Task_1n6yyya">
-        <dc:Bounds x="490" y="162" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1i5ir7f_di" bpmnElement="CreaListaApprovatori">
-        <dc:Bounds x="330" y="162" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="InizioEvento">
         <dc:Bounds x="232" y="184" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="234" y="227" width="34" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_0pw6qzj_di" bpmnElement="EndEvent_0pw6qzj">
-        <dc:Bounds x="1062" y="454" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1120" y="344" width="0" height="0" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNShape id="SubProcess_1onmv19_di" bpmnElement="SubProcess_approvazione" isExpanded="true">
+        <dc:Bounds x="295" y="360" width="490" height="190" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0sb03kk_di" bpmnElement="Activity_0v9ycp6">
-        <dc:Bounds x="860" y="432" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="SubProcess_1onmv19_di" bpmnElement="SubProcess_1onmv19" isExpanded="true">
-        <dc:Bounds x="295" y="380" width="490" height="190" />
-      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0b2vs1k_di" bpmnElement="Flow_0b2vs1k">
+        <di:waypoint x="351" y="455" />
+        <di:waypoint x="490" y="455" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0hvxmc1_di" bpmnElement="SequenceFlow_0hvxmc1">
-        <di:waypoint x="650" y="475" />
-        <di:waypoint x="707" y="475" />
+        <di:waypoint x="590" y="455" />
+        <di:waypoint x="707" y="455" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="913" y="306" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0b2vs1k_di" bpmnElement="Flow_0b2vs1k">
-        <di:waypoint x="351" y="475" />
-        <di:waypoint x="550" y="475" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="StartEvent_0jxprd9_di" bpmnElement="StartEvent_0jxprd9">
-        <dc:Bounds x="315" y="457" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="723" y="339.12018669778297" width="0" height="0" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_0slps19_di" bpmnElement="EndEvent_0slps19">
-        <dc:Bounds x="707" y="457" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="957" y="339" width="0" height="0" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_1ebfut0_di" bpmnElement="approvazione_per">
-        <dc:Bounds x="550" y="435" width="100" height="80" />
+        <dc:Bounds x="490" y="415" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0slps19_di" bpmnElement="EndEvent_Sub_Approvazione">
+        <dc:Bounds x="707" y="437" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="708" y="480" width="34" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_0jxprd9_di" bpmnElement="StartEvent_Sub_Approvazione">
+        <dc:Bounds x="315" y="437" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="318" y="480" width="34" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0sb03kk_di" bpmnElement="Activity_0v9ycp6">
+        <dc:Bounds x="860" y="415" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0pw6qzj_di" bpmnElement="FineEvento">
+        <dc:Bounds x="1062" y="437" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1064" y="480" width="34" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_0zi6s4a_di" bpmnElement="Task_1n6yyya">
+        <dc:Bounds x="685" y="162" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1i5ir7f_di" bpmnElement="CreaListaApprovatori">
+        <dc:Bounds x="540" y="162" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_046fvzd_di" bpmnElement="Activity_1cu1spj">
+        <dc:Bounds x="350" y="162" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
